@@ -650,6 +650,12 @@ query {
 
 ---
 
+# Cycle
+- Query: "I want the name and email of the user with ID 1."
+
+- GraphQL Server: "Okay, let me check who knows how to get that info..."
+
+- Resolver: "I do. I’ll look it up in the database and return it."
 
 
 

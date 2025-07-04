@@ -353,5 +353,303 @@ query {
 
 ---
 
+# **Main Parts of GraphQL**
+
+GraphQL has the following core components:
+
+1. **Schema**
+2. **Type Definitions (typeDefs)**
+3. **Queries, Mutations, and Subscriptions**
+4. **Resolvers**
+5. **Scalars and Custom Types**
+6. **Context**
+7. **Directives**
+8. **Fragments**
+9. **Variables**
+10. **Introspection (optional but useful)**
+
+---
+
+## 1. **Schema**
+
+The schema is the **blueprint** of your GraphQL API. It defines:
+
+* What data is available
+* What operations can be performed
+* The relationships between data types
+
+You define the schema using **GraphQL SDL (Schema Definition Language)**.
+
+### Example:
+
+```graphql
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+type Query {
+  user(id: ID!): User
+}
+```
+
+> This tells the server: “A `User` has 3 fields, and you can fetch a user by ID.”
+
+---
+
+## 2. **Type Definitions (typeDefs)**
+
+These are the **GraphQL schema strings** that you define in your code (often passed into Apollo Server).
+
+### Example in JavaScript:
+
+```js
+const typeDefs = `#graphql
+  type User {
+    id: ID!
+    name: String!
+  }
+
+  type Query {
+    user(id: ID!): User
+  }
+`;
+```
+
+---
+
+## 3. **Operations: Query, Mutation, Subscription**
+
+### A. **Query** – Read operations (like GET)
+
+```graphql
+query {
+  user(id: "1") {
+    name
+  }
+}
+```
+
+### B. **Mutation** – Write operations (create, update, delete)
+
+```graphql
+mutation {
+  createUser(name: "Harsh") {
+    id
+    name
+  }
+}
+```
+
+### C. **Subscription** – Real-time operations (with WebSockets)
+
+```graphql
+subscription {
+  userAdded {
+    id
+    name
+  }
+}
+```
+
+> In Apollo Server, **query**, **mutation**, and **subscription** are all optional root types in your schema.
+
+---
+
+## 4. **Resolvers**
+
+Resolvers are **functions** that tell the GraphQL server **how to fetch the data** for a given type or field.
+
+### Example:
+
+For this schema:
+
+```graphql
+type Query {
+  hello: String
+}
+```
+
+You write a resolver:
+
+```js
+const resolvers = {
+  Query: {
+    hello: () => 'Hello, Harsh!'
+  }
+}
+```
+
+### Resolver Function Signature:
+
+```js
+(parent, args, context, info)
+```
+
+| Parameter | Description                                         |
+| --------- | --------------------------------------------------- |
+| `parent`  | Result from the parent resolver (for nested fields) |
+| `args`    | Arguments passed in the query                       |
+| `context` | Shared object across all resolvers (e.g. auth, DB)  |
+| `info`    | Info about execution state (rarely used)            |
+
+---
+
+## 5. **Scalars and Custom Types**
+
+### Built-in Scalars:
+
+* `Int`
+* `Float`
+* `String`
+* `Boolean`
+* `ID`
+
+### Custom Types:
+
+```graphql
+type User {
+  id: ID!
+  profile: Profile
+}
+
+type Profile {
+  age: Int
+  bio: String
+}
+```
+
+### Custom Scalars:
+
+You can define scalars like `Date`, `Email`, etc., using packages like `graphql-scalars`.
+
+---
+
+## 6. **Context**
+
+The `context` object is available to all resolvers and is used to:
+
+* Authenticate users
+* Pass global data (e.g., DB connection)
+* Share user session info
+
+### Example:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: ({ req }) => {
+    const token = req.headers.authorization;
+    const user = verifyToken(token);
+    return { user };
+  }
+});
+```
+
+---
+
+## 7. **Directives**
+
+GraphQL directives let you add **extra behavior** to your queries or schema.
+
+### Common example: `@include` and `@skip`
+
+```graphql
+query getUser($withEmail: Boolean!) {
+  user(id: "1") {
+    name
+    email @include(if: $withEmail)
+  }
+}
+```
+
+You can also define custom schema directives like `@auth`, but those require extra setup.
+
+---
+
+## 8. **Fragments**
+
+Fragments allow you to **reuse parts of a query**, especially useful in large apps or when querying the same fields from different places.
+
+```graphql
+fragment userFields on User {
+  id
+  name
+  email
+}
+
+query {
+  user(id: "1") {
+    ...userFields
+  }
+}
+```
+
+---
+
+## 9. **Variables**
+
+GraphQL supports **variables** to keep queries dynamic and clean.
+
+```graphql
+query GetUser($userId: ID!) {
+  user(id: $userId) {
+    id
+    name
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "userId": "1"
+}
+```
+
+---
+
+## 10. **Introspection**
+
+GraphQL supports introspection, which lets clients query the schema itself. This enables features like:
+
+* Auto-generated docs
+* Schema explorers
+* Autocomplete in GraphQL tools
+
+```graphql
+query {
+  __schema {
+    types {
+      name
+    }
+  }
+}
+```
+
+---
+
+## Recap: Key GraphQL Components
+
+| Part           | Purpose                                    |
+| -------------- | ------------------------------------------ |
+| `Schema`       | The full structure of types and operations |
+| `typeDefs`     | SDL definition of the schema               |
+| `Query`        | Read operations                            |
+| `Mutation`     | Write operations                           |
+| `Subscription` | Real-time operations via WebSockets        |
+| `Resolvers`    | Functions that return data                 |
+| `Scalars`      | Basic types (String, Int, etc.)            |
+| `Context`      | Shared object for auth, DB, etc.           |
+| `Fragments`    | Reusable field sets                        |
+| `Variables`    | Dynamic input to queries/mutations         |
+| `Directives`   | Control query behavior (e.g., @include)    |
+
+---
+
+
 
 
